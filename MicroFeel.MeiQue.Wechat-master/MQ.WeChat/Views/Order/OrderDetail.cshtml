@@ -1,0 +1,410 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>订单详情</title>
+    <link rel="stylesheet" href="~/css/bootstrap.css">
+    <link rel="stylesheet" href="~/css/weixin.css">
+    <link rel="stylesheet" href="~/css/base.css">
+    <link rel="stylesheet" href="~/css/order_detail.css">
+
+</head>
+<body>
+    <div class="mq_container">
+        <div id="loadingToast" style="display:none;">
+            <div class="weui-toast">
+                <i class="weui-loading weui-icon_toast"></i>
+                <p class="weui-toast__content">获取详情</p>
+            </div>
+        </div>
+
+    </div>
+    <script id="error_page" type="text/html">
+        <img src="~/images/ic_error.page.jpg" width="200" height="150" alt="网络错误" class="error_page">
+    </script>
+    <script id="test" type="text/html">
+        <div id="loadingToast1" style="display:none;">
+            <div class="weui-toast">
+                <i class="weui-loading weui-icon_toast"></i>
+                <p class="weui-toast__content">拒绝中</p>
+            </div>
+        </div>
+
+        <div id="dialog1" style="display: none;">
+            <div class="weui-mask"></div>
+            <div class="weui-dialog">
+                <div class="weui-dialog__hd"><strong class="weui-dialog__title">是否现货</strong></div>
+                <div class="weui-dialog__bd">现在是否有货，如果是期货，请预计到货时间</div>
+                <div class="weui-dialog__ft">
+                    <a href="javascript:;" class="weui-dialog__btn weui-dialog__btn_default" style="color:#28a745"
+                       id="stock">现货</a>
+                    <a href="javascript:;" class="weui-dialog__btn weui-dialog__btn_primary" style="color:#dc3545"
+                       id="futures">期货</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="weui-form-preview" id="jumbotron">
+            <div class="weui-form-preview__hd">
+                <label class="weui-form-preview__label">订单编号</label>
+                <em class="weui-form-preview__value">{{number}}</em>
+            </div>
+            <div class="weui-form-preview__bd">
+                <p>
+                    <label class="weui-form-preview__label">送货地址</label>
+                    <span class="weui-form-preview__value">{{address}}</span>
+                </p>
+                <p>
+                    <label class="weui-form-preview__label" id="time">预计到货时间</label>
+                    <span class="weui-form-preview__value" id="time1">{{billdate}}</span>
+                </p>
+                <p>
+                    <label class="weui-form-preview__label">总价格</label>
+                    <span class="weui-form-preview__value">{{price}}</span>
+                </p>
+                <p id="status" style="display:none;">
+                    <label id="order-status" class="weui-form-preview__label">订单状态</label>
+                    <span id="status-span" class="weui-form-preview__value">拒绝</span>
+                </p>
+            </div>
+            <div class="weui-form-preview__ft">
+                <a id="accept" class="weui-form-preview__btn weui-form-preview__btn_primary" style="color:#28a745"
+                   href="javascript:">接订单</a>
+                <a id="refuse" class="weui-form-preview__btn weui-form-preview__btn_primary" style="color:#dc3545"
+                   href="javascript:">不接单</a>
+                <a id="already" class="weui-form-preview__btn weui-form-preview__btn_primary" style="color:#dc3545"
+                   href="javascript:">货物已到</a>
+                <a id="delivery" class="weui-form-preview__btn weui-form-preview__btn_primary" style="color:#28a745"
+                   href="javascript:">如果主材已送达,点击添加送达凭证</a>
+                <a id="installation" class="weui-form-preview__btn weui-form-preview__btn_primary" style="color:#28a745"
+                   href="javascript:">如果主材已安装,点击添加送达凭证</a>
+            </div>
+        </div>
+
+        <ul class="list-group">
+            {{each list}}
+            <li class="list-group-item">
+                <span>{{$value.Name}}</span> <span class="type float-right">x{{$value.Quantity}}</span>
+            </li>
+            {{/each}}
+        </ul>
+
+    </script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/weui.min.js"></script>
+    <script src="~/js/sweetalert2.all.js"></script>
+    <script src="~/js/art-template.js"></script>
+    <script>
+        function neterror() {
+            $('#loadingToast').hide();
+            var htmlerror = template('error_page', "");
+            $('.mq_container').html(htmlerror);
+        }
+        //接单
+        function acceptOrder() {
+            $('#accept').hide();
+            $('#refuse').hide();
+            $('#already').hide();
+            $('#installation').hide();
+            $('#delivery').show();
+            $('#status-span').html('接单');
+            $('#order-status').css('color', '#28a745');
+            $('#status-span').css('color', '#28a745');
+            $('#status').show();
+        }
+        //送货
+        function delivery() {
+            $('#accept').hide();
+            $('#refuse').hide();
+            $('#already').hide();
+            $('#installation').show();
+            $('#delivery').hide();
+            $('#time').html('安装时间');
+            if (window.time == undefined) {
+                $('#time1').html('无');
+            } else { 
+                $('#time1').html(time)
+            }
+            $('#status-span').html('主材已送达');
+            $('#order-status').css('color', '#28a745');
+            $('#status-span').css('color', '#28a745');
+            $('#status').show();
+        }
+
+        //安装
+        function installation() {
+            $('#accept').hide();
+            $('#refuse').hide();
+            $('#already').hide();
+            $('#installation').hide();
+            $('#delivery').hide();
+            $('#status-span').html('主材已安装');
+            $('#order-status').css('color', '#28a745');
+            $('#status-span').css('color', '#28a745');
+            $('#status').show();
+        }
+
+        function refuseOrder() {
+            $('#accept').hide();
+            $('#refuse').hide();
+            $('#already').hide();
+            $('#installation').hide();
+            $('#delivery').hide();
+            $('#status-span').html('拒绝');
+            $('#order-status').css('color', '#dc3545');
+            $('#status-span').css('color', '#dc3545');
+            $('#status').show();
+        }
+
+        function acceptOrdata(result) {
+            $('#accept').hide();
+            $('#refuse').hide();
+            $('#already').show();
+            $('#installation').hide();
+            $('#delivery').hide();
+            if (typeof (result) == 'string') {
+                $('#status-span').html('接单预计到货时间' + result.substring(0, 10));
+            } else {
+                $('#status-span').html('接单预计到货时间' + result[0].value + '-' + result[1].value + '-' + result[2].value);
+            }
+            $('#order-status').css('color', '#28a745');
+            $('#status-span').css('color', '#28a745');
+            $('#status').show();
+        }
+        $.ajax({
+            url: 'https://dingtalk.microfeel.net:12401/api/WeChat/BillDetail',
+            data: {
+                BillID: '@ViewData["billID"]'
+            },
+            type: 'GET',
+            beforeSend: function (res) {
+                $("#loadingToast").show();
+            },
+            success: function (res) {
+                if (res.result === 0) {
+                    if (res.billdate != undefined) { 
+                        res.billdate = res.billdate.substring(0, 10);
+                    }
+                    if (res.installtime != undefined) { 
+                        res.installtime = res.installtime.substring(0, 10);
+                    }
+                    window.billdate = res.billdate;
+                    window.time = res.installtime;
+                    var data = res;
+                    var html = template('test', data);
+                    $('.mq_container').html(html);
+                    if (res.status === 0) {
+                        $('#accept').show();
+                        $('#refuse').show();
+                        $('#already').hide();
+                        $('#installation').hide();
+                        $('#delivery').hide();
+                    } else if (res.status === 3) {
+                        acceptOrdata(res.extimatetime);
+                    } else if (res.status === 1) {
+                        acceptOrder();
+                    } else if (res.status === 2) {
+                        refuseOrder();
+                    } else if (res.status === 4) {
+                        delivery();
+                    } else if (res.status === 5) {
+                        installation();
+                    }
+                    $('#refuse').click(function () {
+                        swal({
+                            title: '请填写原因',
+                            input: 'textarea',
+                            inputPlaceholder: '填写原因',
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消',
+                            showCancelButton: true,
+                            inputValidator: (value) => {
+
+                                $.ajax({
+                                    url: 'https://dingtalk.microfeel.net:12401/api/WeChat/Reject',
+                                    type: "POST",
+                                    dataType: 'json',
+                                    beforeSend: function (res) {
+                                        $(".weui-toast__content").html("拒绝中");
+                                        $("#loadingToast1").show();
+                                    },
+                                    data: {
+                                        BillID: '@ViewData["billID"]',
+                                        Status: 2,
+                                        Reason: value
+                                    },
+                                    success: function (res) {
+                                        refuseOrder();
+                                    },
+                                    error: function (res) {
+                                        alert(JSON.stringify(res));
+                                    },
+                                    complete: function () {
+                                        $("#loadingToast1").hide();
+                                    }
+                                });
+                            }
+                        });
+                    });
+                    $('#accept').click(function () {
+                        $('#dialog1').show();
+                    });
+                    //现货
+                    $('#stock').click(function () {
+                        $('#dialog1').hide();
+                          swal({
+                        title: '请填写手机号',
+                        input: 'tel',
+                        inputPlaceholder: '填写手机号',
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        showCancelButton: true,
+                        inputValidator: (value) => {
+                            $.ajax({
+                                type: 'POST',
+                                url: 'https://dingtalk.microfeel.net:12401/api/WeChat/ReceiveBill',
+                                dataType: 'json',
+                                beforeSend: function (res) {
+                                    $(".weui-toast__content").html("接单中");
+                                    $("#loadingToast1").show();
+                                },
+                                data: {
+                                    BillID: '323a6836-6e67-4e82-8549-208c4a143a16',
+                                    Status: 1,
+                                    Phone: value
+                                },
+                                success: function (res) {
+                                    acceptOrder();
+                                },
+                                error: function (res) {
+                                    alert(res);
+                                },
+                                complete: function () {
+                                    $("#loadingToast1").hide();
+                                }
+                            });
+
+
+                        }
+                    });
+                    });
+
+                    //期货
+                    $('#futures').click(function () {
+                        $('#dialog1').hide();
+                        //弹出时间窗
+                        let date = new Date();
+                        let year = date.getFullYear();
+                        let month = date.getMonth() + 1;
+                        let day = date.getDate();
+                        weui.datePicker({
+                            start: date, // 从今天开始
+                            end: 2030,
+                            cron: '* * *',
+                            defaultValue: [year, month, day],
+                            onConfirm: function (result) {
+                                $.ajax({
+                                    type: 'POST',
+                                    url: 'https://dingtalk.microfeel.net:12401/api/WeChat/ReceiveBill',
+                                    dataType: 'json',
+                                    beforeSend: function (res) {
+                                        $(".weui-toast__content").html("接单中");
+                                        $("#loadingToast1").show();
+                                    },
+                                    data: {
+                                        BillID: '@ViewData["billID"]',
+                                        Status: 3,
+                                        BillDate: result[0].value + '-' + result[1].value + '-' + result[2].value
+                                    },
+                                    success: function (res) {
+                                        acceptOrdata(result);
+                                    },
+                                    error: function (res) {
+                                        alert(res);
+                                    },
+                                    complete: function () {
+                                        $("#loadingToast1").hide();
+                                    }
+                                });
+                            },
+                            id: 'datePicker'
+                        });
+                    });
+                    //安装
+                    $('#installation').click(function () {
+                        if (window.time == undefined) {
+                            alert('没有安装时间,无法上传安装凭证');
+                            return;
+                        }
+                          window.location.href = "@Url.Action("Install", "Order")" + "?billID=" + '@ViewData["billID"]';
+                    });
+                    //送达
+                    $('#delivery').click(function () {
+                        if (window.billdate == undefined) { 
+                            alert('没有送达时间,无法上传安装凭证');
+                            return;
+                        }
+                          window.location.href = "@Url.Action("Delivery", "Order")" + "?billID=" + '@ViewData["billID"]';
+                    });
+                    //到货
+                    $('#already').click(function () {
+                         swal({
+                        title: '请填写手机号',
+                       input: 'tel',
+                        inputPlaceholder: '填写手机号',
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        showCancelButton: true,
+                        inputValidator: (value) => {
+                            $.ajax({
+                                type: 'POST',
+                                url: 'https://dingtalk.microfeel.net:12401/api/WeChat/ReceiveBill',
+                                dataType: 'json',
+                                beforeSend: function (res) {
+                                    $(".weui-toast__content").html("更新到货时间");
+                                    $("#loadingToast1").show();
+                                },
+                                data: {
+                                    BillID: '323a6836-6e67-4e82-8549-208c4a143a16',
+                                    Status: 1,
+                                    Phone: value
+                                },
+                                success: function (res) {
+                                    acceptOrder();
+                                },
+                                error: function (res) {
+                                    alert(res);
+                                },
+                                complete: function () {
+                                    $("#loadingToast1").hide();
+                                }
+                            });
+                        }
+                    });
+                    });
+                    $(window).scroll(function () {
+                        let scrollTop = $(window).scrollTop();
+                        $("#jumbotron").css('top', scrollTop);
+                    });
+                } else {
+                    neterror();
+                }
+            },
+            error: function (res) {
+                neterror();
+            },
+            complete: function () {
+                $("#loadingToast").hide();
+            }
+        })
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,312 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html lang="cmn-Hans-CN">
+<head>
+    <title>订单类型</title>
+    <!-- Required meta tags -->
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, minimum-scale=1.0, shrink-to-fit=no">
+    <meta name="author" content="zdd">
+    <meta name="description" content="order" />
+    <meta name="keywords" content="order, orderList" />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <meta name="full-screen" content="yes">
+    <meta name="x5-fullscreen" content="true">
+    @* 样式引入和脚本引入可以使用 bundle 技术优化，后期再说 *@
+    <!-- Bootstrap CSS -->
+    <link href="~/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 引入 WeUI -->
+    <link href="~/css/weui.min.css" rel="stylesheet">
+    <!-- 自己的样式表 -->
+    <link href="~/css/order/order_type.css" rel="stylesheet">
+    <!-- short icon-->
+    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon">
+    <link href="~/favicon.ico" rel="icon" type="image/x-icon">
+    <link href="~/images/apple-touch-icon.png" rel="apple-touch-icon" type="image/png">
+</head>
+<body ontouchstart>
+    <div class="custom-container">
+        <div id="void_page" style="display:none;">
+            <div class="text-center">
+                <img src="~/images/empty.jpg" width="300" />
+            </div>
+            <h4 id="void_reason" class="mt-4 text-center text-muted">网络出现问题</h4>
+        </div>
+        <div class="cell-container">
+            <div class="weui-cells">
+                <div class="container-fluid">
+                    <div class="input-group my-4">
+                        <div class="input-group-prepend">
+                            <label class="input-group-text" for="inputGroupSelect01">订单类型</label>
+                        </div>
+                        <select class="custom-select" id="inputGroupSelect01">
+                            @**@
+                        </select>
+                    </div>
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <label class="input-group-text" for="inputGroupSelect02">订单类型明细</label>
+                        </div>
+                        <select class="custom-select" id="inputGroupSelect02"></select>
+                    </div>
+                    <textarea class="form-control mb-5" type="text" rows="3" cols="350" id="mf_remark" placeholder="备注信息"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div id="mf_button">
+            <button id="create-order" class="weui-btn weui-btn_primary">创建销售订单</button>
+        </div>
+
+        <div id="loadingToast" style="display:none;">
+            <div class="weui-mask_transparent"></div>
+            <div class="weui-toast">
+                <i class="weui-loading weui-icon_toast"></i>
+                <p class="weui-toast__content">数据加载中</p>
+            </div>
+        </div>
+
+        <div id="toast" style="display: none;">
+            <div class="weui-mask_transparent"></div>
+            <div class="weui-toast">
+                <i class="weui-icon-success-no-circle weui-icon_toast"></i>
+                <p class="weui-toast__content">已完成</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="~/js/jquery-3.3.1.min.js"></script>
+    <script src="~/js/popper.min.js"></script>
+    <script src="~/js/bootstrap.min.js"></script>
+    <script src="~/js/mescroll.min.js"></script>
+    <script src="~/js/weui.min.js"></script>
+    <script>
+
+        $(function () {
+            var page = { num: 1, size: 5000 };     
+           var buycarList = [];         
+            //获取购物车里面的材料
+            $.ajax({
+            url: 'https://api.gopas.com.cn/api/Agent/GetShoppingCart?openid=@ViewData["openId"]&companyid=2',
+            type: 'GET',
+            dataType: 'json',
+            beforeSend: function () {        
+                $("#loadingToast").show();
+            },
+                success: function (res) {
+                console.log(res)
+                buycarList = res.Datas;  
+                getSelectedOptions();
+            },
+            error: function (res) {
+                alert('获取失败' + JSON.stringify(res))
+            },
+            complete: function () {
+                $("#loadingToast").hide();
+            }
+            });   
+            function getSelectedOptions() {
+                $.ajax({
+                    type: 'GET',
+                    dataType: 'JSON',
+                    beforeSend: function () {
+                        $("#loadingToast").show();
+                    },
+                    url: 'https://api.gopas.com.cn/api/Agent/GetSEOrderTypes?openid=@ViewData["openId"]&pname=',
+                    success: function (curPageData) {             
+                        if (curPageData.Code == 200) {
+                            list = curPageData.Datas;
+                            console.log(list);
+                            setSelectedOptions(list);
+                            getSecondSelectedOptions(list[0]);
+                        } else {                
+                            $('.cell-container').removeClass('cc-container');
+                            $('#void_page').show();
+                            $('#void_reason').text('网络出现问题');
+                            $('.cell-container').hide();
+                        }
+                    },
+                    error: function (e) {
+                        $('.cell-container').removeClass('cc-container');
+                        $('#void_page').show();
+                        $('#void_reason').text('网络出现问题');
+                        $('.cell-container').hide();
+                    },
+                    complete: function () {
+                        $("#loadingToast").hide();
+                    }
+                });
+            }
+
+
+            function setSelectedOptions(list) {
+                var result = '';
+                for (var i = 0; i < list.length; i++) {
+                    result +=
+                        '<option value=' + list[i] + '>' + list[i] + '</option>'
+                }
+
+                if (list.length > 0) {
+                    $('#inputGroupSelect01').append(result);
+                } else {
+                    $('.cell-container').removeClass('cc-container');
+                    $('.cell-container').hide();
+                    $('#void_page').show();
+                    $('#void_reason').text('材料为空');
+                }
+            }
+
+            function getSecondSelectedOptions(pname) {
+
+                $.ajax({
+                    type: 'GET',
+                    dataType: 'JSON',
+                    beforeSend:function (res) {
+                        $("#loadingToast").show();
+                    },
+                    url: 'https://api.gopas.com.cn/api/Agent/GetSEOrderTypes?openid=@ViewData["openId"]&pname=' + pname,
+                    success: function (curPageData) {
+
+    
+                        if (curPageData.Code == 200) {
+                            secondList = curPageData.Datas;
+                            $('.cell-container').addClass('cc-container');
+
+                            setSecondSelectedOptions(secondList);
+                        } else {
+                            $('.cell-container').removeClass('cc-container');
+                            $('#void_page').show();
+                            $('#void_reason').text('网络出现问题');
+                            $('.cell-container').hide();
+                        }
+                    },
+                    error: function (e) {
+                        $('.cell-container').removeClass('cc-container');        
+                        $('#void_page').show();
+                        $('#void_reason').text('网络出现问题');
+                        $('.cell-container').hide();
+                    },
+                    complete: function () {
+                        $("#loadingToast").hide();
+                    }
+                });
+            }
+
+
+            function setSecondSelectedOptions(list) {
+                var result = '';
+                for (var i = 0; i < list.length; i++) {
+                    result +=
+                        '<option value=' + list[i] + '>' + list[i] + '</option>'
+                }
+
+                if (list.length > 0) {
+                    $('#inputGroupSelect02').append(result);
+                } else {
+                    $('.cell-container').removeClass('cc-container');
+                    $('#void_page').show();
+                    $('#void_reason').text('材料为空');
+                }
+            }
+
+
+            $("#inputGroupSelect01").change(function () {
+                var $loadingToast = $('#loadingToast');
+                var $successToast = $('#toast');
+                if ($loadingToast.css('display') != 'none') return false;
+                if ($successToast.css('display') != 'none') return false;
+
+                $loadingToast.fadeIn(100);
+                $selectedOption = $("#inputGroupSelect01>option:selected");
+                $("#inputGroupSelect02").empty();
+                var pname = $selectedOption.text();
+                getSecondSelectedOptions(pname);
+
+            });
+            $('button#create-order').on('click', function () {
+                var $loadingToast = $('#loadingToast');
+                var $successToast = $('#toast');
+                if ($loadingToast.css('display') !== 'none') return false;
+                if ($successToast.css('display') !== 'none') return false;
+
+                $selectedOption = $("#inputGroupSelect01>option:selected");
+                $secondSelectedOption = $("#inputGroupSelect02>option:selected");
+                if ($selectedOption.text() && $secondSelectedOption.text()) {
+                    console.log(10);
+                    console.log(buycarList);
+                    $loadingToast.fadeIn(100);
+                    var entryList = [];
+                    for (var i = 0; i < buycarList.length; i++) {
+                        var entry = {
+                            ProductID: buycarList[i].Id,
+                            Numbers: buycarList[i].Numbers,
+                            ProductName: buycarList[i].Name,
+                            UnitName: buycarList[i].UnitName,
+                            Price: buycarList[i].Price
+                        };
+                        entryList.push(entry);
+                    }
+
+                    if (!entryList.length) {
+                        alert('请先添加材料！');
+                        return false;
+                    }
+
+               
+
+                    console.log({
+                        OpenID: '@ViewData["openId"]',
+                        FlowID: 3112,
+                        Remark: $('#mf_remark').val(),
+                        OrderType: $selectedOption.text(),
+                        OrderTypeDetail: $secondSelectedOption.text(),
+                        WX_SEOrderEntry: entryList
+                    });
+                   $.ajax({
+                        type: 'POST',
+                        url: 'https://api.gopas.com.cn/api/Agent/CreateSEOrder',
+                        data: JSON.stringify({
+                            OpenID: '@ViewData["openId"]',
+                            FlowID: 3201,
+                            Remark: $('#mf_remark').val(),
+                            OrderType: $selectedOption.text(),
+                            OrderTypeDetail: $secondSelectedOption.text(),
+                            WX_SEOrderEntry: entryList
+                        }),
+                        dataType: 'JSON',
+                        contentType: "application/json; charset=utf-8",
+                        success: function (curPageData) {
+                            console.log(curPageData);
+                            if (curPageData.Code === 200) {
+                                //clearItems();
+                                $loadingToast.css('opacity', 0);
+                                $loadingToast.fadeOut();
+                                window.location.href = "@Url.Action("SubmitResult", "SubmitResult")";
+                            } else {
+                                $loadingToast.fadeOut(100);
+                               alert(JSON.stringify(curPageData));
+                           }
+                       },
+                       error: function (res) {
+                           $loadingToast.fadeOut(100);
+                           alert(JSON.stringify(res));
+                       },
+                        complete: function() {
+                            $loadingToast.fadeOut(100);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

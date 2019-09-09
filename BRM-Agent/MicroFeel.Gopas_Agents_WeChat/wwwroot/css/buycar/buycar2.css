@@ -1,0 +1,52 @@
+﻿body, html {
+    height: 100%;
+    -webkit-tap-highlight-color: transparent;
+}
+#void_page {
+    padding-top: 100px;
+}
+
+#buycar {
+    width:100%;
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    border-color: transparent;
+    border-radius: 0;  
+}
+
+button.weui-btn:after {
+    border-radius: 0;
+}
+
+.weui-btn {
+    border-radius: 0;
+}
+
+.cc-container {
+    height: calc(100vh - 50px);
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+}
+
+.mf_button_container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.weui-cells {
+    margin-top: 0;
+}
+
+.bottom-container {
+    width: 100%;
+    display: flex;
+}
+
+#total-money-container {
+    background: white;
+    line-height: 46px;
+}
+.bottom-position {
+    padding-bottom: 52px;
+}

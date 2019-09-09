@@ -1,0 +1,48 @@
+﻿body, html {
+    height: 100%;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.data-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+#bill-no, #bill-date {
+    font-size: 20px;
+    margin-bottom: 8px;
+}
+
+#bill-state, #total_money, #total, .state {
+    font-size: 20px;
+    margin-bottom: 0;
+    height: 46px;
+    line-height: 46px;
+}
+
+
+
+#materiel-money, #materiel-name {
+    font-size: 18px;
+    padding: 0;
+    margin-bottom: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.jumbotron {
+    margin-bottom: 0;
+    padding: 24px 0;
+}
+
+.desc p {
+    font-size: 14px;
+    line-height: 0.9em;
+}
+
+#void_page {
+    margin-top: 20px;
+}

@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  MicroFeel.Pramy.Agent:
+    image: microfeelgopasagentswechat
+    build:
+      context: .
+      dockerfile: MicroFeel.Pramy.Agent/Dockerfile

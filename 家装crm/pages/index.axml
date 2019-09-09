@@ -1,0 +1,6 @@
+<import src='/pages/list/index.axml'/>
+<view>
+    <template is="List" data={{...listData}}  >
+      
+    </view>
+   

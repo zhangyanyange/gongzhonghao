@@ -1,0 +1,240 @@
+﻿@{
+    Layout = null;
+}
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>送达凭证</title>
+    <link rel="stylesheet" href="~/css/bootstrap.css">
+    <link rel="stylesheet" href="~/css/weixin.css">
+    <link rel="stylesheet" href="~/css/base.css">
+    <link rel="stylesheet" href="~/css/delivery.css">
+
+</head>
+<body>
+    <div class="mq_container">
+        <div id="loadingToast" style="display:none;">
+            <div class="weui-toast">
+                <i class="weui-loading weui-icon_toast"></i>
+                <p class="weui-toast__content">剩余主材</p>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="page uploader js_show">
+                <div class="weui-uploader">
+                    <h3>请上传送达凭证</h3>
+                    <div class="weui-uploader__bd" id="pics">                      
+                        <div class="weui-uploader__input-box" id="uploads">
+                            <input id="uploaderInput" class="weui-uploader__input" type="button"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h3>为哪些材料添加送货凭证</h3>
+            <div class="weui-cells weui-cells_checkbox margin-bot-50">
+
+            </div>
+
+        </div>
+        <a href="javascript:;" class="weui-btn weui-btn_primary upload-my font-color" id="upload">上传凭证</a>
+    </div>
+        <script id="error_page" type="text/html">
+            <img src="~/images/ic_error.page.jpg" width="200" height="150" alt="网络错误" class="error_page">
+        </script>
+        <script id="picture" type="text/html">
+            <img class="weui-uploader__file" src="{{localData}}" alt="图片">
+        </script>
+        <script id="test" type="text/html">
+            {{each list}}
+            <label class="weui-cell weui-check__label" for="s">
+                <div class="weui-cell__bd">
+                    <span>{{$value.Name}}</span>
+                </div>
+                <div class="div-center">
+                    <div class="less" index="{{$value.index}}"></div>
+                    <span class="span_width">{{$value.Quantity}}</span>
+                    <div class="add" index="{{$value.index}}"></div>
+                </div>
+                <div class="weui-cell__hd check-div" index="{{$value.index}}">
+                    <input type="checkbox" class="weui-check" checked="checked" index="{{$value.index}}">
+                    <i class="weui-icon-checked"></i>
+                </div>
+            </label>
+            {{/each}}
+        </script>
+
+        <script src="~/lib/jquery/dist/jquery.min.js"></script>
+        <script src="~/js/art-template.js"></script>
+        <script src="~/js/weixin-jssdk.js"></script>
+        <script>
+            $(function () {              
+                //网络错误
+                function neterror() {
+                    $('#loadingToast').hide();
+                    var htmlerror = template('error_page', "");
+                    $('.mq_container').html(htmlerror);
+                }
+                //上传
+                $("#upload").click(function () {                    
+                    let flag = false;
+                    let materials = [];
+                    for (let i = 0; i < $(".weui-check").length; i++){
+                        if ($(".weui-check").eq(i).attr("checked")) { 
+                            let index = $(".weui-check").eq(i).attr("index");
+                            let material = {};
+                            material.ID = window.res.list[index].ID;
+                            var value = $(".span_width").eq(index).text();
+                            material.Quantity = value;
+                            materials.push(material);
+                            flag = true;
+                        }
+                    } 
+                    if (!flag) {
+                        alert("请选择你要发送凭证的材料");
+                        return;
+                    }
+                    console.log(JSON.stringify(materials));
+                    if ($('#pics').children("img").length < 1) {
+                        alert("请上传凭证");
+                        return;
+                    }
+                    let pictures = [];
+                    for (let i = 0; i < $('#pics').children("img").length; i++) {
+                        var img = $('#pics').children("img").eq(i).attr("src");
+                        pictures.push(img);
+                    }
+                    //上传凭证
+                    $.ajax({
+                        url: 'https://dingtalk.microfeel.net:12401/api/Supplier/Delivery',
+                        type: "POST",
+                        dataType: 'json',
+                        beforeSend: function (res) {
+                            $(".weui-toast__content").html("上传中");
+                            $("#loadingToast").show();
+                        },
+                        data: {
+                            BillID:  '@ViewData["billID"]',
+                            Pictures: pictures,
+                            Details: materials
+                        },
+                        success: function (res) {
+                            alert('上传成功');
+                            window.history.go(-1);
+                        },
+                        error: function (res) {
+                            alert('上传失败' + JSON.stringify(res));
+                        },
+                        complete: function () {
+                            $("#loadingToast").hide();
+                        }
+                    });
+                });
+                $('.mq_container').on('click','.check-div',function () {
+                    var index = $(this).attr("index");
+                    var check = $('.weui-check__label>.weui-cell__hd>input').eq(index).attr("checked");
+                    if (check) {
+                        $('.weui-check__label>.weui-cell__hd>input').eq(index).removeAttr("checked");
+                    } else {
+                        $('.weui-check__label>.weui-cell__hd>input').eq(index).attr("checked", "checked");
+                    }
+                });
+                //加
+                $('.mq_container').on('click', '.add', function () {
+                    let index = $(this).attr("index");
+                    var value = $(".span_width").eq(index).text();
+                   
+                    if (parseInt(value) === window.res.list[index].Quantity) {
+                        alert("已超过最大送货数");
+                        return;
+                    }
+                    $(".span_width").eq(index).text(parseInt(value)  + 1);
+                }) 
+                //减
+                $('.mq_container').on('click', '.less', function () {
+                    let index = $(this).attr("index");
+                    var value = $(".span_width").eq(index).text();
+                  
+                    if (parseInt(value) === 1) {
+                        alert("送货数不能小于0");
+                        return;
+                    }
+                    $(".span_width").eq(index).text(parseInt(value) - 1);
+                }) 
+                $.ajax({
+                    type: 'GET',
+                    url: 'https://dingtalk.microfeel.net:12401/api/Supplier/Surplus',
+                    dataType: 'json',
+                    beforeSend: function (res) {
+                        $("#loadingToast").show();
+                    },
+                    data: {
+                        BillID: '@ViewData["billID"]',
+                    },
+                    success: function (res) {
+                   
+                        for (let i = 0; i < res.list.length; i++) {
+                            res.list[i].index = i;
+                        }
+                        window.res = res;
+                        var data = res;
+                        var html1 = template('test', data);
+                        $('.weui-cells_checkbox').html(html1);
+                    },
+                    error: function (res) {         
+                         neterror();
+                    },
+                    complete: function () {
+                        $("#loadingToast").hide();
+                    }
+                });
+               
+            
+                wx.config({
+                debug: false,
+                appId: 'wxc02e3e49cd60997c', // 必填，公众号的唯一标识
+                timestamp: '@ViewData["timestamp"]', // 必填，生成签名的时间戳
+                nonceStr: '@ViewData["nonceStr"]', // 必填，生成签名的随机串
+                signature: '@ViewData["signature"]',// 必填，签名
+                jsApiList: ['uploadImage','chooseImage'] // 必填，需要使用的JS接口列表
+                })
+                window.value = 0;
+
+                $('#uploaderInput').click(function () {
+                 wx.chooseImage({
+                     count: 9 - window.value, // 默认9
+                     sizeType: ['compressed'],
+                     sourceType: ['album', 'camera'],
+                     success: function (res) {
+                         var localIds = res.localIds;
+
+                         for (let i = 0; i < localIds.length; i++) {
+
+                             wx.getLocalImgData({
+                                 localId: localIds[i], // 图片的localID
+                                 success: function (res) {
+                                     //var localData = res.localData; // localData是图片的base64数据，可以用img标签显示
+                                     window.value++;
+                                     if (window.value === 9) {
+                                         $("#uploaderInput").hide();
+                                     }
+                                     var data = { localData: res.localData };
+                                     var html = template('picture', data);
+                                     $('#uploads').before(html);
+                                 }
+                             });
+                         }
+                     }
+                 });
+             });
+
+            //wx.ready(function () {
+
+
+            //});
+        });
+
+        </script>
+</body>
+</html>

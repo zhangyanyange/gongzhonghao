@@ -1,0 +1,70 @@
+﻿body, html {
+    height: 100%;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.material_list, .material {
+    height: 50px;
+}
+
+div {
+    font-size: 16px;
+}
+
+.weui-cells {
+    margin-top: 0;
+    
+}
+
+
+
+#void_page {
+    padding-top: 100px;
+}
+
+#mf_button {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    /*-ms-border-radius: 0;*/
+    border-radius: 0;
+}
+
+button.weui-btn:after {
+   -ms-border-radius: 0;
+    border-radius: 0;
+}
+
+.weui-btn {
+    -ms-border-radius: 0;
+    border-radius: 0;
+}
+
+.weui-cells {
+    margin-top: 0;
+}
+
+.cc-container {
+    height: calc(100vh - 50px);
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+}
+
+.mf_button_container {
+    display: flex;
+    -o-justify-content: space-around;
+    -webkit-justify-content: space-around;
+    justify-content: space-around;
+}
+
+.mf-flex-container {
+    display: flex;
+   -ms-align-items: center;
+    -o-align-items: center;
+    -webkit-align-items: center;
+    align-items: center;
+   -o-justify-content: space-between;
+    -webkit-justify-content: space-between;
+    justify-content: space-between;
+}

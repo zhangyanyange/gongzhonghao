@@ -1,0 +1,313 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html lang="zh">
+<head>
+    <title>商品搜索</title>
+    <!-- Required meta tags -->
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, minimum-scale=1.0, shrink-to-fit=no">
+    <meta name="description" content="order" />
+    <meta name="keywords" content="order, orderList" />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <meta name="full-screen" content="yes">
+    <meta name="x5-fullscreen" content="true">
+
+    @* 样式引入可以使用 bundle 技术优化，后期再说 *@
+    <!-- Bootstrap CSS -->
+    <link href="~/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 引入 WeUI -->
+    <link href="~/css/weui.min.css" rel="stylesheet">
+    <!-- 自己的样式表 -->
+    <link href="~/css/material/material_list2.css" rel="stylesheet">
+    <!-- short icon-->
+    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon">
+    <link href="~/favicon.ico" rel="icon" type="image/x-icon">
+    <link href="~/images/apple-touch-icon.png" rel="apple-touch-icon" type="image/png">
+    <link rel="stylesheet" href="~/css/alertify.core.css" />
+    <link rel="stylesheet" href="~/css/alertify.bootstrap.css" />
+    <link rel="stylesheet" href="~/css/toastify.css" />
+</head>
+<body ontouchstart>
+    <div class="custom-container">
+        <div class="weui-search-bar" id="search_bar">
+            <form class="weui-search-bar__form">
+                <div class="weui-search-bar__box">
+                    <i class="weui-icon-search"></i>
+                    <input type="search" class="weui-search-bar__input" id="search_input" placeholder="请输入商品名称或条码" />
+                </div>
+            </form>
+            <a href="javascript:" style="margin-left: 10px; line-height: 28px;color: #09bb07;white-space: nowrap;" id="search_cancel">搜索</a>
+        </div>
+
+        <div id="void_page" style="display:none;">
+            <div class="text-center">
+                <img src="~/images/empty.jpg" width="300" />
+            </div>
+            <h4 id="void_reason" class="mt-4 text-center text-muted">网络出现问题</h4>
+        </div>
+
+
+        <div class="cell-container">
+            <div class="weui-cells">
+            </div>
+        </div>
+
+        <div id="mf_button">
+            <div class="mf_button_container">
+                <button id="buycar" class="weui-btn weui-btn_primary">进入已选购列表</button>
+            </div>
+        </div>
+
+        <div id="loadingToast" style="display:none;">
+            <div class="weui-mask_transparent"></div>
+            <div class="weui-toast">
+                <i class="weui-loading weui-icon_toast"></i>
+                <p class="weui-toast__content">数据加载中</p>
+            </div>
+        </div>
+
+        <div id="toast" style="display: none;">
+            <div class="weui-mask_transparent"></div>
+            <div class="weui-toast">
+                <i class="weui-icon-success-no-circle weui-icon_toast"></i>
+                <p class="weui-toast__content">已完成</p>
+            </div>
+        </div>
+    </div>
+    <script id="test" type="text/html">
+        {{each list}}
+        <div class="weui-media-box weui-media-box_text" id={{$value.ID}}>
+            <div class="mf-flex-container">
+                <div class="mf-flex-item">
+                    <h4 class="weui-media-box__title">{{$value.Name}} </h4>
+                    <p class="weui-media-box__desc" style="margin-bottom:3px"> {{$value.ItemNumbers}} </p>
+                    <p class="weui-media-box__desc" style="color: #d9534f;margin-bottom:3px">{{$value.BarCode}} </p>
+                    <p class="weui-media-box__title" style="margin-bottom:3px">
+                        单价：<span class="text-danger"> {{$value.Price }} </span>
+                    </p>
+                </div>
+                <div class="mf-flex-item">
+                    <button id="mf_add" class="weui-btn weui-btn_mini weui-btn_primary" data-flag={{$value.ID}}>添加</button>
+                </div>
+            </div>
+        </div>
+        {{/each}}
+    </script>
+
+
+    <script src="~/js/jquery-3.3.1.min.js"></script>
+    <script src="~/js/popper.min.js"></script>
+    <script src="~/js/bootstrap.min.js"></script>
+    <script src="~/js/mescroll.min.js"></script>
+    <script src="~/js/weui.min.js"></script>
+    <script src="~/js/pulltorefresh.min.js"></script>
+    <script src="~/js/alertify.min.js"></script>
+    <script src="~/js/toastify.js"></script>
+    <script src="~/js/art-template.js"></script>
+
+    <script>
+        window.alert = function (name) {
+            var iframe = document.createElement("IFRAME");
+            iframe.style.display = "none";
+            iframe.setAttribute("src", 'data:text/plain,');
+            document.documentElement.appendChild(iframe);
+            window.frames[0].window.alert(name);
+            iframe.parentNode.removeChild(iframe);
+        }
+        //重写confirm方法，去掉地址显示
+        window.confirm = function (name) {
+            var iframe = document.createElement("IFRAME");
+            iframe.style.display = "none";
+            iframe.setAttribute("src", 'data:text/plain,');
+            document.documentElement.appendChild(iframe);
+            var result = window.frames[0].window.confirm(name);
+            iframe.parentNode.removeChild(iframe);
+            return result;
+        }
+        window.prompt = function (name) {
+            var iframe = document.createElement("IFRAME");
+            iframe.style.display = "none";
+            iframe.setAttribute("src", 'data:text/plain,');
+            document.documentElement.appendChild(iframe);
+            var result = window.frames[0].window.prompt(name);
+            iframe.parentNode.removeChild(iframe);
+            return result;
+        }
+        $(function () {
+            var list = [];
+
+            $("#search_cancel").click(function () {
+                var searchValue = $(".weui-search-bar__input").val();
+                if (searchValue === "") {
+                    alert("请输入搜索内容");
+                    return
+                }
+
+                $.ajax({
+                    type: 'POST',
+                    data: JSON.stringify({
+                        openid:'@ViewData["openId"]',
+                        key: searchValue,
+                        pageindex: 1,
+                        pagesize: 10000,
+                        level: 3,
+                    }),
+                    dataType: 'json',
+                    contentType: "application/json; charset=utf-8",
+                    url: 'https://api.gopas.com.cn/api/Agent/GetProduce',
+                    beforeSend: function (res) {
+                        $("#loadingToast").show();
+                    },
+                    success: function (curPageData) {
+                        $('#loadingToast').fadeOut(100);
+                        if (curPageData.Code === 200) {
+                            for (var z = 0; z < curPageData.Datas.length; z++) {
+                                if (curPageData.Datas[z].BarCode === null) {
+                                    curPageData.Datas[z].BarCode = "无条码"
+                                }
+                            }
+                            list = curPageData.Datas;
+                            var data = {
+                                list: curPageData.Datas
+                            }
+
+                            if (curPageData.Datas.length > 0) {
+                                $('#void_page').hide();
+                                var data = {
+                                    list: curPageData.Datas
+                                }
+                                var html = template('test', data);
+                                $('.weui-cells').html(html);
+                                $('.cell-container').addClass('cc-container');
+                            } else {
+                                var data1 = {
+                                    list: curPageData.Datas
+                                }
+                                var html = template('test', data1);
+                                $('.weui-cells').html(html);
+
+                                $('.cell-container').removeClass('cc-container');
+                                $('#void_page').show();
+                                $('#void_reason').text('材料为空');
+                            }
+                        } else {
+                            var data2 = {
+                                list: curPageData.Datas
+                            }
+                            var html = template('test', data2);
+                            $('.weui-cells').html(html);
+
+                            $('.cell-container').removeClass('cc-container');
+                            $('#void_page').show();
+                            $('#void_reason').text('网络出现问题');
+                        }
+                    },
+                    error: function (e) {
+                        $('.cell-container').removeClass('cc-container');
+                        $("#loadingToast").hide();
+                        $('#void_page').show();
+                        $('#void_reason').text('网络出现问题');
+                    },
+                    complete: function () {
+                        $("#loadingToast").hide();
+                    }
+                })
+            });
+
+            $('.weui-cells').on('click', '#mf_add', function () {
+
+                var data_flag = $(this).attr('data-flag');
+                var materialModel = null;
+                for (var i = 0; i < list.length; i++) {
+                    if (list[i].ID == data_flag) {
+                        materialModel = list[i];
+                        break;
+                    }
+                }
+                var $loadingToast = $('#loadingToast');
+                var $successToast = $('#toast');
+                if ($loadingToast.css('display') !== 'none') return false;
+                if ($successToast.css('display') !== 'none') return false;
+                alertify.set({
+                    labels: {
+                        ok: "确认",
+                        cancel: "取消"
+                    }
+                });
+                alertify.prompt("请填写物品数量", function (e, str) {
+                    if (e) {
+                        var count = parseInt(str);
+                        if (isNaN(count)) {
+                            Toastify({
+                                text: "请正确输入数量",
+                                duration: 2000,
+                                positionLeft: true
+                            }).showToast();
+                        } else {
+                    $.ajax({
+                    type: 'POST',
+                    data: JSON.stringify({
+                        openid: '@ViewData["openId"]',
+                        "companyid": 2,
+                        "ShoppingCarts": [{
+                            "Id": materialModel.ID,
+                            "Name": materialModel.Name,
+                            "Numbers": parseInt(count),
+                            "Price": materialModel.Price,
+                            "UnitId": materialModel.UnitID,
+                            "UnitName": materialModel.UnitName,
+                            "CompanyId": 2,
+                            "ItemNumbers": materialModel.ItemNumbers
+                        }]
+                    }),
+                        dataType: 'json',
+                        beforeSend: function (res) {
+                            $(".weui-toast__content").html("添加中");
+                            $("#loadingToast1").show();
+                        },
+                    contentType: "application/json; charset=utf-8",
+                        url: "https://api.gopas.com.cn/api/Agent/AddShoppingCart?openid="+'@ViewData["openId"]'+"&companyid=1",
+                        success: function (res) {
+                            if (res.Code === 200) {
+                                $(".weui-toast__content").html("添加完成");
+                                $successToast.show();
+                                var t = setTimeout(function () {
+                                    $successToast.fadeOut(100);
+                                },500);
+                            } else {
+                                alert(JSON.stringify(res));
+                            }
+                    },
+                        error: function (e) {
+                            alert(JSON.stringify(e));
+                    },
+                    complete: function() {
+                        $('#loadingToast').hide();
+                    }
+                });
+ }
+                    } else {
+
+
+                    }
+                }, "");
+            });
+
+            $('button#buycar').on('click', function () {
+                var $loadingToast = $('#loadingToast');
+                var $successToast = $('#toast');
+                if ($loadingToast.css('display') !== 'none') return false;
+                if ($successToast.css('display') !== 'none') return false;
+                window.location.href = "@Url.Action("BuyCar", "BuyCar")" + "?openid=" + '@ViewData["openId"]';
+            });
+
+        });
+    </script>
+</body>
+</html>

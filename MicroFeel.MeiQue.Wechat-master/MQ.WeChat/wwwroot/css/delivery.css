@@ -1,0 +1,43 @@
+.add {
+    vertical-align: middle;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-image: url("../images/add.png");
+}
+
+.less {
+    vertical-align: middle;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-image: url("../images/less.png");
+}
+.div-center{
+    height: 20px;
+    line-height: 20px;
+    margin-right: 10px;
+}
+.error_page{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -75px;
+    margin-left: -100px;
+}
+.upload-my {
+    position: fixed;
+    bottom: 0;
+    width: 100%
+}
+.margin-bot-50 {
+    margin-bottom: 54px;
+}
+.span_width {
+    display: inline-block;
+    width: 18px;
+    text-align: center;
+}
+.font-color {
+    color:#fff;
+}

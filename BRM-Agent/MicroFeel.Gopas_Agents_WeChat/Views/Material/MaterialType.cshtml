@@ -1,0 +1,360 @@
+﻿@model MicroFeel.Pramy.Agent.Models.Material
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html lang="zh">
+<head>
+    <title>商品类型</title>
+    <!-- Required meta tags -->
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, minimum-scale=1.0, shrink-to-fit=no">
+    <meta name="author" content="zdd">
+    <meta name="description" content="order" />
+    <meta name="keywords" content="order, orderList" />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <meta name="full-screen" content="yes">
+    <meta name="x5-fullscreen" content="true">
+
+    @* 样式引入可以使用 bundle 技术优化，后期再说 *@
+    <!-- Bootstrap CSS -->
+    <link href="~/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 引入 WeUI -->
+    <link href="~/css/weui.min.css" rel="stylesheet">
+    <!-- 自己的样式表 -->
+    <link href="~/css/material/material_list2.css" rel="stylesheet">
+    <!-- short icon-->
+    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon">
+    <link href="~/favicon.ico" rel="icon" type="image/x-icon">
+    <link href="~/images/apple-touch-icon.png" rel="apple-touch-icon" type="image/png">
+    <link rel="stylesheet" href="~/css/alertify.core.css" />
+    <link rel="stylesheet" href="~/css/alertify.bootstrap.css" />
+    <link rel="stylesheet" href="~/css/toastify.css" />
+</head>
+<body ontouchstart>
+    <div class="custom-container">
+        <div id="void_page" style="display:none;">
+            <div class="text-center">
+                <img src="~/images/empty.jpg" width="300" />
+            </div>
+            <h4 id="void_reason" class="mt-4 text-center text-muted">网络出现问题</h4>
+        </div>
+
+        <div class="weui-search-bar" id="search_bar">
+            <form class="weui-search-bar__form">
+                <div class="weui-search-bar__box">
+                    <i class="weui-icon-search" hidden></i>
+                    <input type="search" class="weui-search-bar__input" id="search_input" placeholder="" disabled />
+                </div>
+                <label for="search_input" class="weui-search-bar__label" id="search_text">
+                    <i class="weui-icon-search"></i>
+                    <span>搜索</span>
+                </label>
+            </form>
+            <a href="javascript:" class="weui-search-bar__cancel-btn" id="search_cancel">'@ViewData["openId"]'</a>
+        </div>
+
+        <div class="cell-container">
+            <div class="weui-cells">
+
+            </div>
+        </div>
+
+        <div id="mf_button">
+            <div class="mf_button_container">
+                <button id="buycar" class="weui-btn weui-btn_primary">进入已选购列表</button>
+            </div>
+        </div>
+
+        <div id="loadingToast" style="display:none;">
+            <div class="weui-mask_transparent"></div>
+            <div class="weui-toast">
+                <i class="weui-loading weui-icon_toast"></i>
+                <p class="weui-toast__content">数据加载中</p>
+            </div>
+        </div>
+
+        <div id="toast" style="display: none;">
+            <div class="weui-mask_transparent"></div>
+            <div class="weui-toast">
+                <i class="weui-icon-success-no-circle weui-icon_toast"></i>
+                <p class="weui-toast__content">已完成</p>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script src="~/js/jquery-3.3.1.min.js"></script>
+    <script src="~/js/popper.min.js"></script>
+    <script src="~/js/bootstrap.min.js"></script>
+    <script src="~/js/mescroll.min.js"></script>
+    <script src="~/js/weui.min.js"></script>
+    <script src="~/js/pulltorefresh.min.js"></script>
+    <script src="~/js/alertify.min.js"></script>
+    <script src="~/js/toastify.js"></script>
+    <script>
+        window.alert = function (name) {
+            var iframe = document.createElement("IFRAME");
+            iframe.style.display = "none";
+            iframe.setAttribute("src", 'data:text/plain,');
+            document.documentElement.appendChild(iframe);
+            window.frames[0].window.alert(name);
+            iframe.parentNode.removeChild(iframe);
+        }
+        //重写confirm方法，去掉地址显示
+        window.confirm = function (name) {
+            var iframe = document.createElement("IFRAME");
+            iframe.style.display = "none";
+            iframe.setAttribute("src", 'data:text/plain,');
+            document.documentElement.appendChild(iframe);
+            var result = window.frames[0].window.confirm(name);
+            iframe.parentNode.removeChild(iframe);
+            return result;
+        }
+        window.prompt = function (name) {
+            var iframe = document.createElement("IFRAME");
+            iframe.style.display = "none";
+            iframe.setAttribute("src", 'data:text/plain,');
+            document.documentElement.appendChild(iframe);
+            var result = window.frames[0].window.prompt(name);
+            iframe.parentNode.removeChild(iframe);
+            return result;
+        }
+        $(function () {
+
+            var page = { num: 1, size: 5000 };
+            var list = [];
+            var buycarList = [];
+            {
+                var level = @Model.Level;
+                var producetypeid = @Model.ProduceTypeId;
+            }
+
+            getFirstPage();
+            function getListData(page) {
+                $.ajax({
+                    type: 'POST',
+                    data: JSON.stringify({
+                        openid: '@ViewData["openId"]',
+                        pid: '@Model.ID',
+                        key: '',
+                        pageindex: page.num,
+                        pagesize: page.size,
+                        level: level,
+                        producetypeid: producetypeid
+                    }),
+                    dataType: 'json',
+                    contentType: "application/json; charset=utf-8",
+                    url: 'https://api.gopas.com.cn/api/Agent/GetProduce',
+                    beforeSend: function (res) {
+                        $("#loadingToast").show();
+                    },
+                    success: function (curPageData) {
+                        $('#loadingToast').fadeOut(100);
+                        if (curPageData.Code === 200) {
+                            list = curPageData.Datas;
+                            console.log(list)
+                            $('.cell-container').addClass('cc-container');
+                            setListData(list);
+                        } else {
+                            $('.cell-container').removeClass('cc-container');
+                            $('#void_page').show();
+                            $('#void_reason').text('网络出现问题');
+                        }
+                    },
+                    error: function(e) {
+                        $('.cell-container').removeClass('cc-container');
+                        $("#loadingToast").hide();
+                        $('#void_page').show();
+                        $('#void_reason').text('网络出现问题');
+                    },
+                    complete: function() {
+                        $("#loadingToast").hide();
+                    }
+                });
+            }
+
+            function setListData(list) {
+                var result = '';
+                if (level === 0 || level === 1 || level === 2) {
+                    for (var i = 0; i < list.length; i++) {
+                        result +=
+                            '<div class="material_list weui-cell weui-cell_access">' +
+                                '<div class="weui-cell__bd">' + list[i].Name + '</div>' +
+                                '<div class="weui-cell__ft"></div>' +
+                            '</div>'
+                    }
+                } else {
+                    for (var z = 0; z < list.length; z++) {
+                        if (list[z].BarCode === null) {
+                            list[z].BarCode = "无条码";
+                        }
+                        result +=
+                            '<div class="weui-media-box weui-media-box_text" id=' + list[z].ID + '>' +
+                                '<div class="mf-flex-container">' +
+                                '<div class="mf-flex-item">' +
+                                    '<h4 class="weui-media-box__title">' + list[z].Name + '</h4>' +
+                                    '<p class="weui-media-box__desc" style="margin-bottom:3px">' + list[z].ItemNumbers + '</p>' +
+                            '<p class="weui-media-box__desc" style="color: #d9534f;margin-bottom:3px">' + list[z].BarCode + '</p>' +
+                                    '<p class="weui-media-box__title" style="margin-bottom:3px">' + '单价：' + '<span class="text-danger">' + list[z].Price + '</span>' + '</p>' +
+                                '</div>' +
+                                '<div class="mf-flex-item">' +
+                                    '<button id="mf_add" class="weui-btn weui-btn_mini weui-btn_primary" data-flag=' + list[z].ID + '>' + '添加' + '</button>' +
+                                '</div>' +
+                                '</div>' +
+                            '</div>'
+                    }
+                }
+
+                if (list.length > 0) {
+                    $('.weui-cells').append(result);
+                } else {
+                    $('.cell-container').removeClass('cc-container');
+                    $('#void_page').show();
+                    $('#void_reason').text('材料为空');
+                }
+            }
+
+            //注意parent追溯到child，on才好使！坑！
+            if (level === 0 || level === 1 || level === 2) {
+                $('.weui-cells').on('click', '.material_list', function () {
+                    var i = $(this).index();
+                    //取得model
+                    var materialModel = list[i];
+
+                    window.location.href = "@Url.Action("NextMaterial", "Material")" + "?openid=" + '@ViewData["openId"]' + "&ID=" + materialModel.ID + "&Level=" + (materialModel.Level + 1) + "&Producetypeid=" + materialModel.ProduceTypeId;
+                });
+            }
+            $('.weui-cells').on('click', '#mf_add', function () {
+
+                var data_flag = $(this).attr('data-flag');
+                console.log(data_flag);
+                var materialModel = null;
+                for (var i = 0; i < list.length; i++) {
+                    if (list[i].ID == data_flag) {
+                        materialModel = list[i];
+                        break;
+                    }
+                }
+                var $loadingToast = $('#loadingToast');
+                var $successToast = $('#toast');
+                if ($loadingToast.css('display') !== 'none') return false;
+                if ($successToast.css('display') !== 'none') return false;
+                alertify.set({
+                    labels: {
+                        ok: "确认",
+                        cancel: "取消"
+                    }
+                });
+                alertify.prompt("请填写物品数量", function (e, str) {
+                    if (e) {
+                        var count = parseInt(str);
+                        if (isNaN(count)) {
+                            Toastify({
+                                text: "请正确输入数量",
+                                duration: 2000,
+                                positionLeft: true
+                            }).showToast();
+                        } else {
+                    $.ajax({
+                    type: 'POST',
+                    data: JSON.stringify({
+                        openid: '@ViewData["openId"]',
+                        "companyid": 2,
+                        "ShoppingCarts": [{
+                            "Id": materialModel.ID,
+                            "Name": materialModel.Name,
+                            "Numbers": parseInt(count),
+                            "Price": materialModel.Price,
+                            "UnitId": materialModel.UnitID,
+                            "UnitName": materialModel.UnitName,
+                            "CompanyId": 2,
+                            "ItemNumbers": materialModel.ItemNumbers
+                        }]
+                    }),
+                        dataType: 'json',
+                        beforeSend: function (res) {
+                            $(".weui-toast__content").html("添加中");
+                            $("#loadingToast1").show();
+                        },
+                    contentType: "application/json; charset=utf-8",
+                        url: "https://api.gopas.com.cn/api/Agent/AddShoppingCart?openid="+'@ViewData["openId"]'+"&companyid=2",
+                        success: function (res) {
+                            if (res.Code === 200) {
+                                $(".weui-toast__content").html("添加完成");
+                                $successToast.show();
+                                var t = setTimeout(function () {
+                                    $successToast.fadeOut(100);
+                                },500);
+                            } else {
+                                alert(JSON.stringify(res));
+                            }
+                    },
+                        error: function (e) {
+                            alert(JSON.stringify(e));
+                    },
+                    complete: function() {
+                        $('#loadingToast').hide();
+                    }
+                });
+                            //alert(materialModel.Name + parseInt(count))
+                            //var transaction = db.transaction([dbName], 'readonly');
+                            //var objectStore = transaction.objectStore(dbName);
+                            //var request = objectStore.get(materialModel.ID);
+                            //request.onsuccess = function (e) {
+                            //    var obj = e.target.result;
+                            //    if (obj) {
+                            //        put({
+                            //            'ID': materialModel.ID,
+                            //            'ItemNumbers': materialModel.ItemNumbers,
+                            //            'Name': materialModel.Name,
+                            //            'Numbers': parseInt(count) + obj.Numbers,
+                            //            'Price': materialModel.Price,
+                            //            'UnitName': materialModel.UnitName
+                            //        });
+                            //    } else {
+                            //        add({
+                            //            'ID': materialModel.ID,
+                            //            'ItemNumbers': materialModel.ItemNumbers,
+                            //            'Name': materialModel.Name,
+                            //            'Numbers': parseInt(count),
+                            //            'Price': materialModel.Price,
+                            //            'UnitName': materialModel.UnitName
+                            //        });
+                            //    }
+                            //}
+
+
+                        }
+                    } else {
+                        // user clicked "cancel"
+
+                    }
+                }, "");
+            });
+
+            function getFirstPage() {
+                getListData(page);
+            }
+
+            $('button#buycar').on('click', function () {
+                var $loadingToast = $('#loadingToast');
+                var $successToast = $('#toast');
+                if ($loadingToast.css('display') !== 'none') return false;
+                if ($successToast.css('display') !== 'none') return false;
+                window.location.href = "@Url.Action("BuyCar", "BuyCar")" + "?openid=" + '@ViewData["openId"]';
+            });
+
+            //进入搜索
+            $('.weui-search-bar').on('click', function () {
+                 window.location.href = "@Url.Action("Index", "SearchMaterial")" + "?openid=" + '@ViewData["openId"]';
+            })
+        });
+    </script>
+</body>
+</html>

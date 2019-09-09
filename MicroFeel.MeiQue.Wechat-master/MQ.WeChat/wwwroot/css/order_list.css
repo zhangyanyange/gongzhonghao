@@ -1,0 +1,10 @@
+.type {
+    float: right;
+}
+.error_page {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -75px;
+    margin-left: -100px;
+}

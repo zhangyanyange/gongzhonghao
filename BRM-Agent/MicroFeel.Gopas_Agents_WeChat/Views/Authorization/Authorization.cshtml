@@ -1,0 +1,235 @@
+﻿@model MicroFeel.Pramy.Agent.Models.AuthorizationModel
+<!doctype html>
+<html lang="cmn-Hans-CN">
+<head>
+    <title>代理商授权</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="author" content="zdd">
+    <meta name="description" content="auth">
+    <meta name="keywords" content="auth">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link href="~/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 引入 WeUI -->
+    <link href="~/css/weui.min.css" rel="stylesheet">
+    <!-- 自己的样式表 -->
+    <link href="~/css/auth/auth.css" rel="stylesheet">
+    <!-- short icon-->
+    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon">
+    <link href="~/favicon.ico" rel="icon" type="image/x-icon">
+    <link href="~/images/apple-touch-icon.png" rel="apple-touch-icon" type="image/png">
+</head>
+<body ontouchstart>
+    <div class="content">
+        <div id="alert"></div>
+        <div class="container">
+            <div class="row">
+                <div class="col-12 py-md-3 pl-md-5 bd-content">
+                    <form>
+                        <div class="weui-cells weui-cells_form">
+                            <div class="weui-cell weui-cell_vcode">
+                                <div class="weui-cell__hd">
+                                    <label class="weui-label">手机号</label>
+                                </div>
+                                <div class="weui-cell__bd">
+                                    <input class="weui-input" type="tel" placeholder="请输入手机号" id="phone">
+                                </div>
+                                <div class="weui-cell__ft">
+                                    <button type="button" class="weui-vcode-btn" id="vcode-btn">获取验证码</button>
+                                </div>
+                            </div>
+                            <div class="weui-cell">
+                                <div class="weui-cell__hd"><label class="weui-label">验证码</label></div>
+                                <div class="weui-cell__bd">
+                                    <input class="weui-input" type="number" pattern="[0-9]*" placeholder="请输入验证码" id="vcode">
+                                </div>
+                            </div>
+
+                        </div>
+                        
+                        <button id="showLoadingToast" type="button" class="weui-btn weui-btn_primary">
+                            提交
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="weui-footer" id="footer">
+        <p class="weui-footer__links">
+            <a href="javascript:void(0)" class="weui-footer__link" disable>联系管理员</a>
+        </p>
+        <p class="weui-footer__text">Copyright ©  microfeel</p>
+    </div>
+
+
+    <div id="loadingToast" style="display:none;">
+        <div class="weui-mask_transparent"></div>
+        <div class="weui-toast">
+            <i class="weui-loading weui-icon_toast"></i>
+            <p class="weui-toast__content">数据加载中</p>
+        </div>
+    </div>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="~/js/jquery-3.3.1.min.js"></script>
+    <script src="~/js/popper.min.js"></script>
+    <script src="~/js/bootstrap.min.js"></script>
+    <script>
+        var c = 60;
+        var t;
+        var btn = $('#vcode-btn');
+        function timedCount() {
+            btn.text(c + 's');
+            c--;
+            if (c >= 0) {
+                t = setTimeout("timedCount()", 1000);
+            } else {
+                btn.text('获取验证码');
+                clearTimeout(t);
+                c = 60;
+            }
+        }
+        $(function () {
+            
+            btn.on('click', function () {
+                if ($('.alert').length) {
+                    return false;
+                }
+                if (btn.text() !== "获取验证码") {
+                    return false;
+                }
+                if (!$('input[id="phone"]').val()) {
+                    var result = '<div class="alert mb-0 alert-warning fade show"  role="alert">' + '请正确填写 ' + '<strong>' + '手机号' + '</strong>' + '</div>';
+                    $('#alert').append(result);
+                    setTimeout(function () {
+                        $(".alert").alert('close');
+
+                    }, 1500);
+                    return false;
+                }
+                if (btn.text() === '获取验证码') {
+                    var $loadingToast = $('#loadingToast');
+                    if ($loadingToast.css('display') !== 'none') return false;
+
+                    $loadingToast.fadeIn(100);
+                    //ajax get vcode
+                    $.ajax({
+                        type: 'GET',
+                        dataType: 'JSON',
+                        url: 'https://brmagent.gopas.com.cn/SendMessage/index?PhoneNumber=' + $('input[id="phone"]').val(),
+                        success: function (data) {
+                            $loadingToast.fadeOut(100);
+                            if (!data.result) {
+                                timedCount();
+                                $('#vcode').focus();
+                            } else {
+                                var result = '<div class="alert mb-0 alert-warning fade show"  role="alert">' + '获取失败，' + data.message + '</div>';
+                                $('#alert').append(result);
+                                setTimeout(function () {
+                                    $(".alert").alert('close');
+
+                                }, 1500);
+                                return false;
+                            }
+                        },
+                        error: function (xhr, type) {
+                            $loadingToast.fadeOut(100);
+                            var result = '<div class="alert mb-0 alert-warning fade show"  role="alert">' + '获取失败' + '</div>';
+                            $('#alert').append(result);
+                            setTimeout(function () {
+                                $(".alert").alert('close');
+
+                            }, 1500);
+                            return false;
+                        }
+                    });
+                } else {
+                    var result = '<div class="alert mb-0 alert-warning fade show"  role="alert">' + '获取失败， 请重新获取' + '</div>';
+                    $('#alert').append(result);
+                    setTimeout(function () {
+                        $(".alert").alert('close');
+
+                    }, 1500);
+                    return false;
+                }
+            });
+
+            $("button").click(function () {
+                if ($('.alert').length) {
+                    return false;
+                }
+                var $loadingToast = $('#loadingToast');
+                if ($loadingToast.css('display') !== 'none') return;
+                if (!$('input[id="phone"]').val()) {
+                    var result = '<div class="alert mb-0 alert-warning fade show"  role="alert">' + '请正确填写 ' + '<strong>' + '手机号' + '</strong>' + '</div>';
+                    $('#alert').append(result);
+                    setTimeout(function () {
+                        $(".alert").alert('close');
+
+                    }, 1500);
+                    return false;
+                }
+                if (!$('input[id="vcode"]').val()) {
+
+                    var result = '<div class="alert mb-0 alert-warning fade show"  role="alert">' + '请正确填写 ' + '<strong>' + '验证码' + '</strong>' + '</div>';
+                    $('#alert').append(result);
+                    setTimeout(function () {
+                        $(".alert").alert('close');
+
+                    }, 1500);
+                    return false;
+                }
+
+                $loadingToast.fadeIn(100);
+                jQuery.support.cors = true;
+                //ajax post json
+                $.ajax({
+                    type: 'POST',
+                    
+                    url: 'https://brmagent.gopas.com.cn/SendMessage/verityCaptcha',
+                    data: JSON.stringify({
+                        PhoneNumber: $('input[id="phone"]').val(),
+                        CapthaCode: $('input[id="vcode"]').val(),
+                        OpenId: '@ViewData["openId"]'
+                    }),
+                    contentType: "application/json; charset=utf-8",
+                    success: function (data) {
+                        $loadingToast.fadeOut(100);
+                        @{var action = Model.RedirectAction;}
+                        @{var controller = Model.RedirectController;}
+                        if (data.result) {
+                            var result = '<div class="alert mb-0 alert-warning fade show"  role="alert">' + data.message + '</div>';
+                            $('#alert').append(result);
+                            setTimeout(function () {
+                                $(".alert").alert('close');
+                            }, 1500);
+                            return false;
+                        } else {
+                            window.location.href = '@Url.Action(action, controller)' + '?&openId=' + '@ViewData["openId"]';
+                        }
+                    },
+                    error: function (xhr, type) {
+                        $loadingToast.fadeOut(100);
+                        var result = '<div class="alert mb-0 alert-warning fade show"  role="alert">' + data.message + '</div>';
+                        $('#alert').append(result);
+                        setTimeout(function () {
+                            $(".alert").alert('close');
+
+                        }, 1500);
+                        return false;
+                    },
+                    complete: function() {
+                        $loadingToast.fadeOut(100);
+                    }
+                });
+            });
+        })
+    </script>
+</body>
+</html>
+

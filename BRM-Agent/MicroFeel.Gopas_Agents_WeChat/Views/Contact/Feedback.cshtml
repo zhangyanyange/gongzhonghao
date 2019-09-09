@@ -1,0 +1,52 @@
+﻿<!doctype html>
+<html lang="zh">
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+          crossorigin="anonymous">
+    <!-- 引入 WeUI -->
+    <link rel="stylesheet" href="~/css/weui.min.css" />
+    <style type="text/css">
+        #remark {
+            font-size: 20px;
+        }
+    </style>
+    <title>意见反馈</title>
+</head>
+
+<body>
+
+    <div class="container mt-2">
+
+        <form action="#">
+            <textarea class="form-control mb-5" type="text" rows="3" cols="350" id="sample5" placeholder="请描述您的问题或建议，我们会尽快优化体验，感谢您的反馈"></textarea>
+        </form>
+        <button type="button" class="weui-btn weui-btn_primary">
+            提交
+        </button>
+        
+    </div>
+
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+    crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+    crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+    crossorigin="anonymous"></script>
+
+  <script>
+      $(function () {
+          $('button').on('click', function () {
+
+              alert('反馈成功');
+          });
+      });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,178 @@
+﻿@model AuthorizationModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=no">
+    <title>登录</title>
+    <link rel="stylesheet" href="~/css/weixin.css" />
+    <link rel="stylesheet" href="~/css/bootstrap.css">
+    <link rel="stylesheet" href="~/css/base.css">
+    <link rel="stylesheet" href="~/css/index.css">
+</head>
+
+<body>
+    <div class="mq_container">
+        <div id="loadingToast" style="display:none;">
+            <div class="weui-mask_transparent"></div>
+            <div class="weui-toast">
+                <i class="weui-loading weui-icon_toast"></i>
+                <p class="weui-toast__content">登录中</p>
+            </div>
+        </div>
+
+        <div id="alert" style="display: none;">
+            <div class="weui-mask"></div>
+            <div class="weui-dialog">
+                <div class="weui-dialog__hd"><strong class="weui-dialog__title"></strong></div>
+                <div class="weui-dialog__bd"></div>
+                <div class="weui-dialog__ft">
+                    <a href="javascript:;" class="weui-dialog__btn weui-dialog__btn_primary">确定</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="icon_container margin">
+            <img src="~/images/icon.png" class="icon_position">
+        </div>
+        <form class="form-inline margin-top" action="#">
+
+            <div class="input-group mb-3 account">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="basic-addon3">手机号</span>
+                </div>
+                <input type="tel" class="form-control" id="basic-url" aria-describedby="basic-addon3" maxlength="11" placeholder="请输入手机号">
+            </div>
+            <div class="verification_all">
+                <div class="input-group mb-3 verification">
+
+                    <div class="input-group-prepend">
+                        <span class="input-group-text">验证码</span>
+                    </div>
+                    <input type="number" class="form-control" aria-describedby="basic-addon3" maxlength="4" placeholder="请输入验证码" id="accept_yzm">
+
+                </div>
+                <button type="button" class="btn btn-success btn_verification" id="yzm">发送验证码</button>
+            </div>
+            <button type="button" class="btn btn-success login_btn" id="login">登录</button>
+        </form>
+    </div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script>
+        $(function () {
+            sendMessage();
+            validateMessage();
+        });
+
+        function alertMessage(title, content) {
+            $(".weui-dialog__hd>.weui-dialog__title").html(title);
+            $(".weui-dialog__bd").html(content);
+            $("#alert").show();
+        }
+
+        function sendMessage() {
+            $("#yzm").click(function () {
+                let val = $("#basic-url").val();
+                if (val.length != 11) {
+                    alertMessage("手机号", "请检查手机号码是否正确");
+                    window.value = 1;
+                    return;
+                }
+                $(".weui-toast__content").html("发送验证码");
+                $("#loadingToast").show();
+                $(this).attr("disabled", "disabled");
+
+                $.ajax({
+                    url: 'https://dingtalk.microfeel.net:12401/api/wechat/Phone',
+                    data: {
+                        Phone: val,
+                    },
+                    method: 'GET',
+                    success: function (res) {
+                        $("#loadingToast").hide();
+                        if (res.result === 2) {
+                            alertMessage("发送验证码", res.message);
+                            window.value = 2;
+                            return;
+                        }
+                        resetCode();
+                    },
+                    error: function (res) {
+                        $("#loadingToast").hide();
+                        //提示错误信息
+                        alertMessage("发送验证码", JSON.stringify(res));
+                        window.value = 2;
+                    }
+                });
+            });
+
+            $(".weui-dialog__ft").click(function () {
+                $("#alert").hide();
+                if (window.value === 2) {
+                    $("#yzm").removeAttr("disabled")
+                }
+            });
+        }
+
+        function validateMessage() {
+            $("#login").click(function () {
+                let phone = $("#basic-url").val();
+                let yzm = $("#accept_yzm").val();
+                if (phone.length != 11 && yzm.length != 4) {
+                    alertMessage("手机号或验证码", "请检查手机号码或验证码是否正确");
+                    window.value = 4;
+                    return;
+                }
+                $(".weui-toast__content").html("登录中");
+                $("#loadingToast").show();
+                $.ajax({
+                    url: 'https://dingtalk.microfeel.net:12401/api/wechat/Validate',
+                    data: {
+                        Phone: phone,
+                        Code: yzm,
+                        Openid: '@ViewData["openId"]'
+                    },
+                    method: 'GET',
+                    success: function (res) {
+                         @{var action = Model.RedirectAction;}
+                        @{var controller = Model.RedirectController;}
+                        $("#loadingToast").hide();
+                        if (res.result !== 0) {
+                            alertMessage("发送验证码", res.message);
+                            window.value = 3;
+                            return;
+                        }
+                         window.location.href = '@Url.Action(action, controller)' + '?&openId=' + '@ViewData["openId"]';
+                    },
+                    error: function (res) {
+                        $("#loadingToast").hide();
+                        alertMessage("发送验证码", JSON.stringify(res));
+                        window.value = 3;
+                    }
+                })
+            });
+        }
+
+        //倒计时
+        function resetCode() {
+            $('#yzm').html();
+            var second = 60;
+            var timer = null;
+            timer = setInterval(function () {
+                second -= 1;
+                if (second > 0) {
+                    $('#yzm').html("剩余" + second + "秒");
+                } else {
+                    $('#yzm').html("发送验证码");
+                    $('#yzm').removeAttr("disabled")
+                    clearInterval(timer);
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

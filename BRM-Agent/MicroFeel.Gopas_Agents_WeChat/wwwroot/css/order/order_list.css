@@ -1,0 +1,21 @@
+﻿body, html {
+    height: 100%;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.order {
+    height: 50px;
+}
+
+div {
+    font-size: 16px;
+}
+
+.weui-cells {
+    margin-top: 0;
+    border-left: 2px solid #69c;
+}
+
+#void_page {
+    margin-top: 100px;
+}

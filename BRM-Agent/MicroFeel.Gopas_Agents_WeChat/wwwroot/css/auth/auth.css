@@ -1,0 +1,21 @@
+﻿
+body, html {
+    height: 100%;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#showLoadingToast {
+    margin-top: 40px;
+}
+
+.content {
+    min-height: calc(100vh - 80px);
+}
+.title {
+    height:auto;
+    padding:4px;
+    background-color:#fff;
+    font-size:14px;
+    color:aqua;
+}
+

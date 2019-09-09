@@ -1,0 +1,60 @@
+body{
+    background: #f5f5f5;
+}
+/*版心*/
+.mq_container{
+    min-width: 320px;
+    max-width: 640px;
+    width: 100%;
+    margin: 0 auto;
+}
+.title {
+    background-color: #fff;
+    text-align: center;
+    padding: 6px;
+    color: #333;
+}
+.descript{
+    color: #333;
+    margin-right: 16px;
+    margin-left: 16px;
+    font-size: 20px;
+}
+.account {
+    margin-left: 16px;
+    margin-right: 16px;
+}
+.verification {
+    margin-left: 16px;
+    margin-right: 16px;
+    width: 60%;
+}
+.margin-top {
+    margin-top: 15%;
+}
+.verification_all{
+    width: 100%;
+    position: relative;
+}
+.btn_verification {
+    position: absolute;
+    right: 16px;
+    top: 0;
+}
+.login_btn {
+    width: 100%;
+    margin-left: 16px;
+    margin-right: 16px;
+}
+.icon_position {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    margin-left: 50%;
+    top: 40px;
+    left: -40px;
+}
+.icon_container {
+    position: relative;
+    height: 120px;
+}

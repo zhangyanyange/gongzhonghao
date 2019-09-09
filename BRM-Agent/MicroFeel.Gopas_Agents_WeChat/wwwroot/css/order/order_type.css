@@ -1,0 +1,29 @@
+﻿body, html {
+    height: 100%;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#mf_button {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+}
+
+.cc-container {
+    height: calc(100vh - 50px);
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+}
+
+.weui-cells {
+    margin-top: 0;
+}
+
+button.weui-btn:after {
+    border-radius: 0;
+}
+
+.weui-btn {
+    border-radius: 0;
+}

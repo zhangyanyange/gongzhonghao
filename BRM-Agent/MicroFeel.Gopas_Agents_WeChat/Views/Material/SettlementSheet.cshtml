@@ -1,0 +1,158 @@
+﻿
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    @if (@ViewData["title"].Equals("出库详情"))
+    {
+    <title>@ViewData["title"]</title>
+    }
+    else
+    {
+        <title>结算单提醒</title>
+    }
+
+</head>
+<link href="~/css/weui.min.css" rel="stylesheet" />
+<link href="~/css/base.css" rel="stylesheet" />
+<body>
+    <div class="mq_container">
+        <div id="loadingToast" style="display:none;">
+            <div class="weui-toast">
+                <i class="weui-loading weui-icon_toast"></i>
+                @if (@ViewData["title"].Equals("出库详情"))
+                {
+                    <p class="weui-toast__content">获取出库详情</p>
+                }
+                else
+                {
+                    <p class="weui-toast__content">获取结算单</p>
+                }
+            </div>
+        </div>
+
+    </div>
+    <script id="list" type="text/html">
+        {{each Datas}}
+        <div class="weui-form-preview">
+            <div class="weui-form-preview__hd">
+                <div>
+                    <label class="weui-form-preview__label">品名</label>
+                    <span class="weui-form-preview__value">{{$value.Product}}</span>
+                </div>
+            </div>
+            <div class="weui-form-preview__bd">
+                <p>
+                    <label class="weui-form-preview__label">型号</label>
+                    <span class="weui-form-preview__value">{{$value.Model}}</span>
+                </p>
+                <p>
+                    <label class="weui-form-preview__label">单位</label>
+                    <span class="weui-form-preview__value">{{$value.Unit}}</span>
+                </p>
+                <p>
+                    <label class="weui-form-preview__label">数量</label>
+                    <span class="weui-form-preview__value">{{$value.Count}}</span>
+                </p>
+                <p>
+                    <label class="weui-form-preview__label">备注</label>
+                    <span class="weui-form-preview__value">{{$value.Remark}}</span>
+                </p>
+                <p>
+                    <label class="weui-form-preview__label">单价</label>
+                    <span class="weui-form-preview__value">{{$value.Price}}</span>
+                </p>
+                <p class="border-top">
+                    <label class="weui-form-preview__label" style="color: red">金额</label>
+                    <span class="weui-form-preview__value" style="color: red">￥{{$value.Amount}}</span>
+                </p>
+            </div>
+        </div>
+        <br>
+        {{/each}}
+    </script>
+    <script id="header" type="text/html">
+        <div class="header">
+            <div class="page__hd" style="padding: 10px;">
+                <h2 class="page__title">{{Title}}</h2>
+            </div>
+            <div class="weui-form-preview" id="jumbotron">
+                <div class="weui-form-preview__hd">
+                    <p>
+                        <label class="weui-form-preview__label">名字</label>
+                        <span class="weui-form-preview__value" style="font-size: 12px">{{Name}}</span>
+                    </p>
+                </div>
+                <div class="weui-form-preview__bd">
+                    <p>
+                        <label class="weui-form-preview__label">电话</label>
+                        <span class="weui-form-preview__value">{{Tel}}</span>
+                    </p>
+                    <p>
+                        <label class="weui-form-preview__label">摘要</label>
+                        <span class="weui-form-preview__value">{{Summary}}</span>
+                    </p>
+                    <p>
+                        <label class="weui-form-preview__label" style="color: red">总价格</label>
+                        <span class="weui-form-preview__value" style="color: red">￥{{Total}}</span>
+                    </p>
+                </div>
+            </div>
+            <div class="page__hd" style="padding: 10px;">
+                <h3 class="page__title">{{detailTitle}}</h3>
+            </div>
+        </div>
+        <div id="orderDetail">
+        </div>
+    </script>
+    <script src="~/js/jquery-3.3.1.min.js"></script>
+    <script src="~/js/art-template.js"></script>
+    <script>
+        $(function () {
+            $.ajax({
+                url: 'https://api.gopas.com.cn/api/Agent/GetAgentIcStockBillDetail',
+                data: {
+                    openid: '@ViewData["openid"]',
+                    interid: '@ViewData["interid"]'
+                },
+                type: 'GET',
+                beforeSend: function (res) {
+                    $("#loadingToast").show();
+                },
+                success: function (res) {
+                    console.log(res)
+                    if (JSON.parse(res).Code === 200) {
+                        var orderType = JSON.parse(res);
+                        orderType.Datas.detailTitle = orderType.Datas.Datas[0].Name;
+                        var data = orderType.Datas;
+                        var html = template('header', data);
+                        $('.mq_container').html(html);
+                        var height = $('.header').height();
+                        for (var order of orderType.Datas.Datas[0].Datas) {
+                            if (order.Remark === '') {
+                                order.Remark = '无';
+                            }
+                        }
+                        var orderDetail = orderType.Datas.Datas[0];
+                        var html1 = template('list', orderDetail);
+                        $('#orderDetail').css('margin-top', height);
+                        $('#orderDetail').html(html1);
+                    } else { 
+                        alert('错误' + JSON.stringify(res))
+                    }
+                },
+                error: function (res) {
+                    alert('获取失败' + JSON.stringify(res))
+                },
+                complete: function () {
+                    $("#loadingToast").hide();
+                }
+            });
+        }
+    )
+    </script>
+</body>
+</html>

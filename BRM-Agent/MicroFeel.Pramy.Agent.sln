@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2043
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicroFeel.Pramy.Agent", "MicroFeel.Gopas_Agents_WeChat\MicroFeel.Pramy.Agent.csproj", "{092259E8-14CF-4806-A592-2BE4E9597A39}"
+EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{D0B5A0FC-8D6A-41A2-BE0C-1D0CB7DE79B7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{092259E8-14CF-4806-A592-2BE4E9597A39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{092259E8-14CF-4806-A592-2BE4E9597A39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{092259E8-14CF-4806-A592-2BE4E9597A39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{092259E8-14CF-4806-A592-2BE4E9597A39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D0B5A0FC-8D6A-41A2-BE0C-1D0CB7DE79B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0B5A0FC-8D6A-41A2-BE0C-1D0CB7DE79B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0B5A0FC-8D6A-41A2-BE0C-1D0CB7DE79B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0B5A0FC-8D6A-41A2-BE0C-1D0CB7DE79B7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2DDF814C-16EE-4459-89C9-C7BF9D4D3214}
+	EndGlobalSection
+EndGlobal

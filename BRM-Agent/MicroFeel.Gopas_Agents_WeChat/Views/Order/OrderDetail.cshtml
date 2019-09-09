@@ -1,0 +1,161 @@
+﻿@model MicroFeel.Pramy.Agent.Models.Order
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+
+<html lang="cmn-Hans-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, minimum-scale=1.0, shrink-to-fit=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="author" content="zdd">
+    <meta name="description" content="order" />
+    <meta name="keywords" content="order, orderList" />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <meta name="full-screen" content="yes">
+    <meta name="x5-fullscreen" content="true">
+    <title>订单详情</title>
+    @* 样式引入和脚本引入可以使用 bundle 技术优化，后期再说 *@
+    <!-- Bootstrap CSS -->
+    <link href="~/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 引入 WeUI -->
+    <link href="~/css/weui.min.css" rel="stylesheet">
+    <!-- 自己的样式表 -->
+    <link href="~/css/order/order_detail.css" rel="stylesheet">
+    <!-- short icon-->
+    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon">
+    <link href="~/favicon.ico" rel="icon" type="image/x-icon">
+    <link href="~/images/apple-touch-icon.png" rel="apple-touch-icon" type="image/png">
+</head>
+<body ontouchstart>
+    <div id="main">
+        <div class="jumbotron jumbotron-fluid">
+            <div class="container">
+                <div class="row">
+                    <p id="bill-no" class="col-6 text-left text-black">@Model.FBillNo</p>
+                    <p id="bill-date" class="col-6 text-center text-black">@Model.FDate</p>
+                </div>
+                <div class="row">
+                    <p class="col-6 text-muted text-left state">状态: </p>
+                    <p class="col-6 text-muted text-center state">@Model.State</p>
+                </div>
+                <div class="row">
+                    <p id="total" class="col-6 text-muted text-left">合计: </p>
+                    <p id="total_money" class="col-6 text-muted text-center"></p>
+                </div>
+            </div>
+        </div>
+
+        <div id="void_page" style="display:none;">
+            <div class="text-center">
+                <img src="~/images/empty.jpg" width="300" />
+            </div>
+            <h4 id="void_reason" class="mt-4 text-center text-muted"></h4>
+        </div>
+
+        <div class="container">
+            <div id="list">
+
+            </div>
+        </div>
+
+        <div id="loadingToast" style="display:none;">
+            <div class="weui-mask_transparent"></div>
+            <div class="weui-toast">
+                <i class="weui-loading weui-icon_toast"></i>
+                <p class="weui-toast__content">数据加载中</p>
+            </div>
+        </div>
+
+        <div id="dialog" style="display: none;">
+            <div class="weui-mask"></div>
+            <div class="weui-dialog">
+                <div id="dialog-content" class="weui-dialog__bd"></div>
+                <div class="weui-dialog__ft">
+                    <a id="ensure-btn" href="javascript:;" class="weui-dialog__btn weui-dialog__btn_primary">确定</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/js/jquery-3.3.1.min.js"></script>
+    <script src="~/js/popper.min.js"></script>
+    <script src="~/js/bootstrap.min.js"></script>
+    <script src="~/js/pulltorefresh.min.js"></script>
+    <script>
+        function loadData(page, size) {
+            var result = '';
+            var total_money = 0;
+            
+            $.ajax({
+                type: 'GET',
+                dataType: 'json',
+                url: 'https://api.gopas.com.cn/api/Agent/GetOrderEntries?OpenID=' + '@Model.openid' +
+                     '&finterid=' + '@ViewData["finterid"]' +
+                     '&pageindex=' + page +
+                     '&pagesize=' + size +
+                     '&OrderState=' + @Model.FStatus,
+                success: function (data) {
+                    console.log(data);
+                    $('#loadingToast').fadeOut(100);
+                    if (data.Code == 200) {
+                        var list = data.Datas;//data;
+                        console.log(list);
+                        var arrLen = list.length;
+                        if (arrLen > 0) {
+                            for (var i = 0; i < arrLen; i++) {
+                                total_money += list[i].FAmount;
+                                result +=
+                                    '<div class="weui-panel">' +
+                                        '<div class="weui-media-box weui-media-box_text">' +
+                                            '<p id="materiel-name" class="col-8 text-left text-black">' + list[i].FItemName + '</p>' +
+                                            '<p class="text-left text-muted">订货数：' + list[i].FQty + '</p>' +
+                                            '<p class="text-left text-muted">订货价：' + list[i].FPrice + '</p>' +
+                                        '</div>' +
+                                    '</div>'
+                            }
+                            $('#total_money').text(total_money);
+                            $('#list').append(result);
+                        } else {
+                            $('#void_page').show();
+                            $('#void_reason').text('明细为空！');
+                        }
+                    } else {
+                        $('#void_page').show();
+                        $('#void_reason').text('网络出现问题');
+                    }
+                },
+                error: function (xhr, type) {
+                    $('#loadingToast').fadeOut(100);
+                    $('#void_page').show();
+                    $('#void_reason').text('网络出现问题');
+                }
+
+            });
+        }
+
+        $(function () {
+            var ptr = PullToRefresh.init({
+                mainElement: 'body',
+                onRefresh: function () { window.location.reload(); }
+            });
+            var orderList = [];
+            var page = 1;
+            var size = 1000;
+            var $loadingToast = $('#loadingToast');
+
+            $loadingToast.fadeIn(100);
+            loadData(page, size);
+        });
+
+        $(window).on('unload', function () {
+            var $loadingToast = $('#loadingToast');
+            if ($loadingToast.css('display') != 'none')
+                $loadingToast.fadeOut(100);
+        });
+
+    </script>
+</body>
+</html>

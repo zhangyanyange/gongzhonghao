@@ -1,0 +1,150 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>订单列表</title>
+    <link rel="stylesheet" href="~/css/weixin.css">
+    <link rel="stylesheet" href="~/css/bootstrap.css">
+    <link rel="stylesheet" href="~/css/base.css">
+    <link rel="stylesheet" href="~/css/order_list.css">
+</head>
+<body>
+    <div class="mq_container">
+        <div id="loadingToast" style="display:none;">
+            <div class="weui-toast">
+                <i class="weui-loading weui-icon_toast"></i>
+                <p class="weui-toast__content">获取订单</p>
+            </div>
+        </div>
+    </div>
+    <script id="error_page" type="text/html">
+        <img src="~/images/ic_error.page.jpg" width="200" height="150" alt="网络错误" class="error_page">
+    </script>
+    <script id="test" type="text/html">
+        <ul class="list-group">
+            {{each list}}
+            <li class="list-group-item"><span>{{$value.Address}}</span> <span class="type">{{$value.orderType}}</span></li>
+            {{/each}}
+        </ul>
+    </script>
+    <script src="~/js/art-template.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script>
+        function success(res) {
+            $('#loadingToast').hide();
+            for (let i = 0; i < res.list.length; i++) {
+                switch (res.list[i].SupStatus) {
+                    case 0:
+                        res.list[i].orderType = '未处理';
+                        break;
+                    case 1:
+                        res.list[i].orderType = '接单(现货)';
+                        break;
+                    case 2:
+                        res.list[i].orderType = '拒绝';
+                        break;
+                    case 3:
+                        res.list[i].orderType = '接单(期货)';
+                        break;
+                    case 4:
+                        res.list[i].orderType = '接单(送达)';
+                        break;
+                    case 5:
+                        res.list[i].orderType = '接单(安装)';
+                        break;
+                }
+
+            }
+            let data = {
+                list: res.list
+            }
+            var html = template('test', data);
+            $('.mq_container').html(html);
+
+            for (let i = 0; i < data.list.length; i++) {
+                console.log(data.list[i].SupStatus);
+                switch (data.list[i].SupStatus) {
+                    case 0:
+                        let addClass = $('.list-group').children().eq(i).addClass("list-group-item-info");
+                        console.log(addClass);
+                        break;
+                    case 1:
+                        $('.list-group').children().eq(i).addClass('list-group-item-success');
+                        break;
+                    case 2:
+                        $('.list-group').children().eq(i).addClass('list-group-item-danger disable');
+                        break
+                    case 3:
+                        $('.list-group').children().eq(i).addClass('list-group-item-success');
+                        break
+                    case 4:
+                        $('.list-group').children().eq(i).addClass('list-group-item-success');
+                        break
+                    case 5:
+                        $('.list-group').children().eq(i).addClass('list-group-item-success');
+                        break
+                }
+            }
+            $('.list-group').children().click(function () {
+               let index1=$(this).index();
+                switch (data.list[index1].SupStatus) {
+                    case 0:
+                        window.location.href = "@Url.Action("OrderDetail", "Order")" + "?billID=" + data.list[index1].ID ;
+                        break;
+                    case 1:
+                        window.location.href = "@Url.Action("OrderDetail", "Order")" + "?billID="+ data.list[index1].ID;
+                        break;
+                    case 2:
+                        alert("你拒绝了这个订单，无法查看明细")
+                        break;
+                    case 3:
+                      window.location.href = "@Url.Action("OrderDetail", "Order")" + "?billID=" + data.list[index1].ID;
+                        break;
+                     case 4:
+                      window.location.href = "@Url.Action("OrderDetail", "Order")" + "?billID=" + data.list[index1].ID;
+                        break;
+                         case 5:
+                      window.location.href = "@Url.Action("OrderDetail", "Order")" + "?billID=" + data.list[index1].ID;
+                        break;
+                }
+            });
+        }
+
+        function neterror() {
+            $('#loadingToast').hide();
+            var htmlerror = template('error_page', "");
+            $('.mq_container').html(htmlerror);
+        }
+
+        $(function () {
+            $('#loadingToast').show();
+            $.ajax({
+                url: 'https://dingtalk.microfeel.net:12401/api/wechat/Bill',
+                data: {
+                    Openid:'@ViewData["openId"]'
+                },
+                method: 'GET',
+                success: function (res) {
+                    if (res.result === 0) {
+                        success(res);
+                    } else {
+                        neterror();
+                    }
+                },
+                error: function (res) {
+                    neterror();
+                }
+            })
+
+
+        });
+    </script>
+
+</body>
+</html>

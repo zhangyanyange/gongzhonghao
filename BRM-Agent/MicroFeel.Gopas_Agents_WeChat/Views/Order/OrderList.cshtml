@@ -1,0 +1,176 @@
+﻿@model MicroFeel.Pramy.Agent.Models.AuthorizationModel
+<!doctype html>
+<html lang="cmn-Hans-CN">
+<head>
+    <title>订单查询</title>
+    <!-- Required meta tags -->
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, minimum-scale=1.0, shrink-to-fit=no">
+    <meta name="author" content="zdd">
+    <meta name="description" content="order" />
+    <meta name="keywords" content="order, orderList" />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <meta name="full-screen" content="yes">
+    <meta name="x5-fullscreen" content="true">
+    @* 样式引入和脚本引入可以使用 bundle 技术优化，后期再说 *@
+    <!-- Bootstrap CSS -->
+    <link href="~/css/bootstrap.min.css" rel="stylesheet">
+    <!-- 引入 WeUI -->
+    <link href="~/css/weui.min.css" rel="stylesheet">
+    <!-- 自己的样式表 -->
+    <link href="~/css/order/order_list.css" rel="stylesheet">
+    <!-- short icon-->
+    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon">
+    <link href="~/favicon.ico" rel="icon" type="image/x-icon">
+    <link href="~/images/apple-touch-icon.png" rel="apple-touch-icon" type="image/png">
+</head>
+<body ontouchstart>
+
+    <div class="weui-tab">
+        <div class="weui-navbar">
+            <div class="weui-navbar__item weui-bar__item_on" mf_value="1">新订单</div>
+            <div class="weui-navbar__item" mf_value="4001">已出库</div>
+        </div>
+
+        <div class="weui-tab__panel">
+            <div id="void_page" style="display:none;">
+                <div class="text-center">
+                    <img src="~/images/empty.jpg" width="300" />
+                </div>
+                <h4 id="void_reason" class="mt-4 text-center text-muted">网络出现问题</h4>
+            </div>
+            <div class="weui-cells">
+
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingToast" style="display:none;">
+        <div class="weui-mask_transparent"></div>
+        <div class="weui-toast">
+            <i class="weui-loading weui-icon_toast"></i>
+            <p class="weui-toast__content">数据加载中</p>
+        </div>
+    </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="~/js/jquery-3.3.1.min.js"></script>
+    <script src="~/js/popper.min.js"></script>
+    <script src="~/js/bootstrap.min.js"></script>
+    <script src="~/js/mescroll.min.js"></script>
+    <script>
+        $(function () {
+            
+            var page = { num: 1, size: 5000 };
+            var list = [];
+            function getListData(page) {
+                $.ajax({
+                    url: 'https://api.gopas.com.cn/api/Agent/GetOrders?OpenID=' +
+                         '@ViewData["openId"]' +
+                         '&FStatus=1' +
+                         '&pageindex=' + page.num +
+                         '&pagesize=' + page.size,
+                    dataType: "json",
+                    success: function (curPageData) {
+                        console.log(curPageData);
+                        $('#loadingToast').fadeOut(100);
+                        if (curPageData.Code == 200) {
+                            list = curPageData.Datas;
+                            //设置列表数据
+                            setListData(list);
+                            
+                        } else {
+                            $('#void_page').show();
+                            $('#void_reason').text(curPageData.ErrorInfo);
+                        }
+                    },
+                    error: function (xhr) {
+                        console.log(xhr);
+                        $('#loadingToast').fadeOut(100);
+                        $('#void_page').show();
+                        $('#void_reason').text('网络出现问题');
+                    }
+                });
+            }
+
+
+            function setListData(list) {
+                var result = '';
+                for (var i = 0; i < list.length; i++) {
+                    result +=
+                        '<div class="order weui-cell weui-cell_access">' +
+                            '<div class="weui-cell__bd">' + list[i].StateMsg +  '</div>' +
+                            '<div class="weui-cell__ft">' + list[i].FDate.substr(0, 10) + '</div>' +
+                        '</div>'
+                }
+                if (list.length > 0) {
+                    $('.weui-cells').append(result);
+                } else {
+                    $('#void_page').show();
+                    $('#void_reason').text('订单为空');
+                }
+            }
+
+            //注意parent追溯到child，on才好使！坑！
+            $('.weui-cells').on('click', '.order', function () {
+                var i = $(this).index();
+                //取得model
+                var orderModel = list[i];
+                //点击查看detail
+                window.location.href = "@Url.Action("OrderDetail", "Order")" + "?openid=" + '@ViewData["openId"]' + "&FCustom=" + orderModel.FCustom + "&finterid=" + orderModel.FInterID + "&FBillNo=" + orderModel.FBillNo + "&State=" + orderModel.StateMsg + "&FDate=" + orderModel.FDate + "&stateMsg=" + orderModel.StateMsg + '&FStatus=' + orderModel.FStatus;
+
+            });
+
+            $('.weui-navbar__item').on('click', function () {
+                if ($(this).hasClass('.weui-bar__item_on')) return false;
+                var $loadingToast = $('#loadingToast');
+                if ($loadingToast.css('display') != 'none') return false;
+                $(this).addClass('weui-bar__item_on').siblings('.weui-bar__item_on').removeClass('weui-bar__item_on');
+                $('.weui-cells').empty();
+                list = [];
+                $('#void_page').hide();
+                $('#void_reason').text('');
+                $loadingToast.fadeIn(100);
+                $.ajax({
+                    url:
+                         'https://api.gopas.com.cn/api/Agent/GetOrders?OpenID=' +
+                         '@ViewData["openId"]' +
+                         '&FStatus=' + $(this).attr('mf_value') +
+                         '&pageindex=' + page.num +
+                         '&pagesize=' + page.size,
+                    dataType: "json",
+                    success: function (curPageData) {
+                        console.log(curPageData);
+                        $loadingToast.fadeOut(100);
+                        if (curPageData.Code == 200) {
+                            list = curPageData.Datas;
+                            setListData(list);
+                        } else {
+                            $('#void_page').show();
+                            $('#void_reason').text(curPageData.ErrorInfo);
+                        }
+                    },
+                    error: function () {
+                        $loadingToast.fadeOut(100);
+                        $('#void_page').show();
+                        $('#void_reason').text('网络出现问题');
+                    }
+                });
+            });
+
+            function getFirstPage() {
+                $('#loadingToast').fadeIn(100);
+                getListData(page);
+            }
+            getFirstPage();
+
+
+        });
+    </script>
+</body>
+</html>
+
+

@@ -1,0 +1,53 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup Label="Globals">
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PublishWithAspNetCoreTargetManifest>false</PublishWithAspNetCoreTargetManifest>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="wwwroot\新文件夹\**" />
+    <Content Remove="wwwroot\新文件夹\**" />
+    <EmbeddedResource Remove="wwwroot\新文件夹\**" />
+    <None Remove="wwwroot\新文件夹\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ExcelDna.IntelliSense" Version="1.0.8" />
+    <PackageReference Include="Flurl.Http" Version="2.4.0" />
+    <PackageReference Include="log4net" Version="2.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.6" />
+    <PackageReference Include="Microsoft.ServiceFabric.Services.Wcf" Version="3.1.283" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.0.3" />
+    <PackageReference Include="Senparc.Weixin.MP" Version="14.14.0" />
+    <PackageReference Include="Senparc.Weixin.MP.MVC" Version="5.4.5" />
+    <PackageReference Include="Senparc.Weixin.Open" Version="2.10.5" />
+    <PackageReference Include="System.ServiceModel.Duplex" Version="4.5.1" />
+    <PackageReference Include="System.ServiceModel.Http" Version="4.5.1" />
+    <PackageReference Include="System.ServiceModel.NetTcp" Version="4.5.1" />
+    <PackageReference Include="System.ServiceModel.Security" Version="4.5.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="logfile\" />
+    <Folder Include="Models\Menu\" />
+    <Folder Include="Views\BuyCar\" />
+    <Folder Include="Views\OrderType\" />
+  </ItemGroup>
+
+</Project>
